@@ -16,9 +16,9 @@ class serviceprovider(DBConnection):
             return product_id
         except Exception as e:
             print(e)
-            return None
+            return False
         finally:
-            pass
+            con.close()
 
     def create_customer(self, name, email, password):
         con = mysql.connector.connect(host="localhost", user="root", password="root", database="ecommerce",port="3306",auth_plugin='mysql_native_password')
@@ -96,12 +96,12 @@ class serviceprovider(DBConnection):
             c.execute(query)
             con.commit()
             print(f"Product ID {product_id} added to the cart for Customer ID {customer_id}. Quantity: {quantity}")
-            return False
+            return True
         except Exception as e:
             print(e)
-            return None
+            return False
         finally:
-            pass
+            con.close()
         
     def removefromcart(self,customer_id,product_id,):
         con = mysql.connector.connect(host="localhost", user="root", password="root", database="ecommerce",port="3306",auth_plugin='mysql_native_password')

@@ -1,22 +1,27 @@
+import mysql.connector
+import sys
+
+from Entity import customers
+# sys.path.append('C:\Users\Utkarsh\OneDrive\Desktop\CASE STUDY')
+from Entity import *
 from serviceprovider import serviceprovider
 
 class Main():
-
+           
     def main():
         r=serviceprovider()
         while True:
             print("\n----------Main Menu----------")
-            print("\nPress-1 Create product")
-            print("\nPress-2 Create customer")
-            print("\nPress-3 Delete product")
-            print("\nPress-4 Delete customer")
-            print("\nPress-5 Add to Cart")
-            print("\nPress-6 Remove from Cart")
-            print("\nPress-7 Show Cart")
-            print("\nPress-8 Place Order")
-            print("\nPress-9 Show Order by customer")
-            
-            print("Press-3 exit")
+            print("Press-1 Create product")
+            print("Press-2 Create customer")
+            print("Press-3 Delete product")
+            print("Press-4 Delete customer")
+            print("Press-5 Add to Cart")
+            print("Press-6 Remove from Cart")
+            print("Press-7 Show Cart")
+            print("Press-8 Place Order")
+            print("Press-9 Show Order by customer")
+            print("Press-10 exit")
             i=int(input())
             if i==1:
                 product_name = input("Enter product name: ")
@@ -53,19 +58,35 @@ class Main():
                 
             elif i==7:
                 customer_id=input("Enter customer id: ")
-                r.getallfromcart(customer_id)
-                if len(r.getallfromcart(customer_id)) == 0:
-                    print('\nYour Cart is Empty...')
-                    continue
-                print('\nFollowing are the Cart Items :\n*ProductName-(Qty)*')
-                for product_name, quantity in r.getallfromcart(customer_id).items():
-                    print(f'> {self.retrieveProductObject(name).get_name()}-({quantity})')
+                rows = r.get_all_from_cart(customer_id)
+                print(rows)
                 
-            elif i==8:
-                print("Thank you")
-                break
+            elif i == 8:
+                customer_id = int(input("Enter customer id: "))
+                name=input("Enter customer name: ")
+                password=input("Enter password: ")
+                if r.customer_exists(name,password) > 0:
+                    print("Customer login successfully")
+                else:
+                    print("customoer doesnot exist")
+                    # raise CustomerNotFoundException("Customer doesnot exist.") 
+                shipping_address = input("Enter shipping address: ")
+                success = r.placeOrder(customer_id, shipping_address)
+                if success:
+                    print("Order placed successfully!")
+                else:
+                    print("Failed to place the order.")
+                    
+            elif i == 9:       
+                customer_id=input("Enter customer id: ")
+                rows = r.getordersbycustomers(customer_id)
+                print(rows)
+                
+            elif i == 10:
+                print("Existing Ecommerce Application")
             else:
-                print("Invalid choice. Please try again.")
+                print("Invalid Choice")
+                             
                 
 if __name__ == "__main__":
     Main.main()

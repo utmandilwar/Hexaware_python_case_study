@@ -1,17 +1,15 @@
 import mysql.connector 
+from datetime import datetime
 from DBConnection import DBConnection
     
 class serviceprovider(DBConnection):
     
     def create_product(self, name, price,description,stockQuantity):
         con = mysql.connector.connect(host="localhost", user="root", password="root", database="ecommerce",port="3306",auth_plugin='mysql_native_password')
-        try:
-            #self.open() 
+        try: 
             query = f"INSERT INTO products (name, price,description,stockQuantity) VALUES ('{name}', '{price}','{description}', '{stockQuantity}')"
             c = con.cursor()
             c.execute(query)
-            #self.c.execute(query)
-            #self.mydb.commit()
             con.commit()
             product_id = c.lastrowid
             print(f"\nProduct '{name}' added to the database with ID: {product_id}\n")
@@ -20,7 +18,7 @@ class serviceprovider(DBConnection):
             print(e)
             return None
         finally:
-            pass#self.close()
+            pass
 
     def create_customer(self, name, email, password):
         con = mysql.connector.connect(host="localhost", user="root", password="root", database="ecommerce",port="3306",auth_plugin='mysql_native_password')
@@ -123,20 +121,98 @@ class serviceprovider(DBConnection):
         finally:
             pass
         
-    def getallfromcart(self,customer_id):
-        con = mysql.connector.connect(host="localhost", user="root", password="root", database="ecommerce",port="3306",auth_plugin='mysql_native_password')
+    def get_all_from_cart(self,customer_id):
         try:
-            query= f"SELECT product_id, quantity from cart where customer_id= {customer_id}"
-            c= con.cursor()
+            con = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="root",
+            database="ecommerce",
+            port="3306",
+            auth_plugin='mysql_native_password'
+            )
+        
+            query = f"SELECT product_id, quantity FROM cart WHERE customer_id = {customer_id}"
+            c = con.cursor()
             c.execute(query)
-            con.commit()
-            
-            return False
-        except Exception as e:
-            print(e)
+            rows = c.fetchall()
+            return rows
+        
+        except mysql.connector.Error as e:
+            print("Error:", e)
             return None
         finally:
-            pass
+            if 'con' in locals() and con.is_connected():
+                c.close()
+                con.close()
+                
+    def placeOrder(self, customer_id, shipping_address):
+        con = mysql.connector.connect(host="localhost", user="root", password="root", database="ecommerce",port="3306",auth_plugin='mysql_native_password')
+        try:  
+            cart_query = "SELECT p.product_id, p.price, c.quantity FROM cart c INNER JOIN products p ON c.product_id = p.product_id WHERE c.customer_id = %s"
+            c = con.cursor()
+            c.execute(cart_query, (customer_id,))
+            cart_products = c.fetchall()
+
+            if not cart_products:
+                print("Cart is empty. Cannot place an order.")
+                return False  
+            total_price = sum(product[1] * product[2] for product in cart_products)
+            order_date = datetime.now().strftime("%Y-%m-%d")
+            order_query = "INSERT INTO orders (customer_id, order_date, total_price, shipping_address) VALUES (%s, %s, %s, %s)"
+            order_values = (customer_id, order_date, total_price, shipping_address)
+            c = con.cursor()
+            c.execute(order_query, order_values)
+            order_id = c.lastrowid
+
+           
+            order_items_query = "INSERT INTO order_items (order_id, product_id, quantity) VALUES (%s, %s, %s)"
+            for product in cart_products:
+                product_id = product[0]
+                quantity = product[2]
+                item_values = (order_id, product_id, quantity)
+                c = con.cursor()
+                c.execute(order_items_query, item_values)
+
+            
+            clear_cart_query = "DELETE FROM cart WHERE customer_id = %s"
+            c = con.cursor()
+            c.execute(clear_cart_query, (customer_id,))
+
+            con.commit()
+            print(f"Total Price: {total_price}")
+            return True
+        except Exception as e:
+            print(f"Error occurred: {e}")
+            return False
+        finally:
+            c.close()
+            
+    def getordersbycustomers(self,customer_id):
+        con = mysql.connector.connect(host="localhost", user="root", password="root", database="ecommerce",port="3306",auth_plugin='mysql_native_password')
+        try:
+            query = f"SELECT order_id,order_date,total_price, shipping_address quantity FROM orders WHERE customer_id = {customer_id}"
+            c = con.cursor()
+            c.execute(query)
+            rows = c.fetchall()
+            return rows
+        
+        except mysql.connector.Error as e:
+            print("Error:", e)
+            return None
+        finally:
+            if 'con' in locals() and con.is_connected():
+                c.close()
+                con.close()
+        
+        
+        
+    
+                
+
+
+        
+    
         
     
         

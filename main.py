@@ -83,7 +83,7 @@ class Main():
                 print(rows)
                 
             elif i == 10:
-                print("Existing Ecommerce Application")
+                print("Exiting Ecommerce Application")
             else:
                 print("Invalid Choice")
                              
